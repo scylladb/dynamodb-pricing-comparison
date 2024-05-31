@@ -1,0 +1,97 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+# The AWSTemplateFormatVersion identifies the capabilities of the template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/format-version-structure.html
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  dynamodb-pricing-comparison
+  
+  Compare the costs of your DynamoDB usage with ScyllaDB's Alternator.
+  
+  Deploy the app and browse its API endpoint. It will collect metrics about your DynamoDB usage,
+  and it will display them on a web page with a comparison with the cost of using an equivalent
+  provisioning on Scylla Cloud.
+
+# Transform section specifies one or more macros that AWS CloudFormation uses to process your template
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html
+Transform:
+- AWS::Serverless-2016-10-31
+
+Metadata:
+  AWS::ServerlessRepo::Application:
+    Name: dynamodb-pricing-comparison
+    Description: Compare your DynamoDB costs with ScyllaDB’s Alternator
+    Author: ScyllaDB
+    SpdxLicenseId: Apache-2.0
+    LicenseUrl: LICENSE.txt
+    ReadmeUrl: README.md
+    Labels: ["DynamoDB", "ScyllaDB", "NoSQL", "Storage"]
+    SemanticVersion: 1.0.15
+    SourceCodeUrl: https://github.com/scylladb/dynamodb-pricing-comparison
+
+# Resources declares the AWS resources that you want to include in the stack
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/resources-section-structure.html
+Resources:
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+  # This is an API gateway associated with the Lambda handler
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: collect-dynamodb-costs
+      Cors:
+        AllowMethods: "'OPTIONS, GET'"
+        AllowHeaders: "'Content-Type'"
+
+  # This is a Lambda function config associated with the source code: collect-dynamodb-costs.js
+  CollectDynamoDBCosts:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: backend/
+      Handler: src/handlers/collect-dynamodb-costs.handler
+      Runtime: nodejs20.x
+      Architectures:
+        - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: Collect metrics about your DynamoDB usage
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId:
+              Ref: ApiGatewayApi
+      Policies:
+        - Statement:
+            - Sid: AllowDescribeTable
+              Effect: Allow
+              Action:
+                - dynamodb:DescribeTable
+              Resource:
+                - !Sub "arn:aws:dynamodb:*:${AWS::AccountId}:table/*"
+            - Sid: AllowListTables
+              Effect: Allow
+              Action:
+                - dynamodb:ListTables
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - logs:CreateLogGroup
+              Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+            - Effect: Allow
+              Action:
+                - logs:CreateLogStream
+                - logs:PutLogEvents
+              Resource:
+                - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/dynamodb-pricing-comparison:*"
+  # Each Lambda function is defined by properties:
+  # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+
+Outputs:
+  APIGatewayEndpoint:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/collect-dynamodb-costs/"

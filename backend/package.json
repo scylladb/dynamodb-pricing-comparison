@@ -1,0 +1,8 @@
+{
+  "name": "dynamodb-pricing-comparison",
+  "version": "0.0.0",
+  "private": "true",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.587.0"
+  }
+}
