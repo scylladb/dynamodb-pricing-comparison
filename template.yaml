@@ -50,7 +50,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: backend/
-      Handler: src/handlers/collect-dynamodb-costs.handler
+      Handler: src/handler.getDynamoDBUsage
       Runtime: nodejs20.x
       Architectures:
         - x86_64
