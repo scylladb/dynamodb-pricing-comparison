@@ -1,4 +1,4 @@
-import {collectCosts} from "./collect-dynamodb-usage.mjs";
+import {collectAllUsages} from "./collect-dynamodb-usage.mjs";
 import {renderHtml} from "./render.mjs";
 
 /** AWS Lambda handler triggered by the API Gateway */
@@ -9,6 +9,6 @@ export const getDynamoDBUsage = async (event) => {
     headers: {
       "Content-Type": "text/html; charset=utf-8"
     },
-    body: await renderHtml(await collectCosts())
+    body: await renderHtml(await collectAllUsages())
   }
 };

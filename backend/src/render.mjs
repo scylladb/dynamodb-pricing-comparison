@@ -45,8 +45,8 @@ export const renderHtml = async ({ onDemand, provisioned }) => `
                 <td>${table.name}</td>
                 <td>${formatBytes(table.sizeBytes)}</td>
                 <td>${formatBytes(table.averageItemSizeBytes)}</td>
-                <td>${table.rcu}</td>
-                <td>${table.wcu}</td>
+                <td>${table.provisionedCapacity.rcu}</td>
+                <td>${table.provisionedCapacity.wcu}</td>
               </tr>`
             ).join('')
           }

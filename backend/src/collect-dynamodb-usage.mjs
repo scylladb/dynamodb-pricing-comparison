@@ -5,14 +5,18 @@ import {partition} from "./util.mjs";
 export const dynamoDB = new DynamoDBClient();
 
 /**
+ * @typedef {Object} ProvisionedCapacity
+ * @property {number} rcu
+ * @property {number} wcu
+ */
+
+/**
  * @typedef {Object} TableUsage
  * @property {string} name
  * @property {number} sizeBytes
  * @property {number} itemCount
  * @property {number} averageItemSizeBytes
- * @property {number} rcu
- * @property {number} wcu
- * @property {boolean} usesOnDemandBilling
+ * @property {ProvisionedCapacity | undefined} provisionedCapacity
  */
 
 /**
@@ -32,12 +36,10 @@ export const dynamoDB = new DynamoDBClient();
 /**
  * @returns {Promise<{ onDemand: Usages, provisioned: Usages }>}
  */
-export const collectCosts = async () => {
-  const listResponse =
-    await dynamoDB.send(new ListTablesCommand({ /* TODO handle pagination */}));
+export const collectAllUsages = async () => {
+  const tableNames = await getAllTableNames();
 
-  const tableNames = listResponse.TableNames;
-
+  /** @type {Array<import('@aws-sdk/client-dynamodb').DescribeTableCommandOutput>} */
   const tableDescriptions =
     await Promise.all(
       tableNames.map(
@@ -48,33 +50,65 @@ export const collectCosts = async () => {
 
   /** @type {Array<TableUsage>} */
   const tableUsages =
-    tableDescriptions.map(tableDescription => {
-      const table = tableDescription.Table;
-      const itemCount = table.ItemCount; // TODO resilience when undefined
-      const sizeBytes = table.TableSizeBytes;
-      const averageItemSizeBytes = sizeBytes / itemCount;
-      const rcu = table.ProvisionedThroughput.ReadCapacityUnits;
-      const wcu = table.ProvisionedThroughput.WriteCapacityUnits;
-      const usesOnDemandBilling =
-        table.BillingModeSummary !== undefined &&
-        table.BillingModeSummary.BillingMode === BillingMode.PAY_PER_REQUEST;
-      return {
-        name: table.TableName,
-        sizeBytes,
-        itemCount,
-        averageItemSizeBytes,
-        rcu,
-        wcu,
-        usesOnDemandBilling
-      }
-    });
+    tableDescriptions.map(describeOutput => collectTableUsage(describeOutput.Table));
 
-  const [onDemand, provisioned] =
-    partition(tableUsages, tableUsage => tableUsage.usesOnDemandBilling);
+  const [provisioned, onDemand] =
+    partition(tableUsages, tableUsage => tableUsage.provisionedCapacity !== undefined);
 
   return {
     provisioned: summarize(provisioned),
     onDemand: summarize(onDemand)
+  }
+};
+
+/**
+ * @returns {Promise<Array<string>>}
+ */
+const getAllTableNames = async () => {
+  /**
+   * Recursively send `ListTables` commands to DynamoDB to fetch all the table names.
+   * @param {Array<string>} previousResults
+   * @param {string | undefined} lastEvaluatedTableName
+   * @returns {Promise<Array<string>>}
+   */
+  const sendCommand = async (previousResults, lastEvaluatedTableName) => {
+    const input =
+      lastEvaluatedTableName !== undefined ? { ExclusiveStartTableName: lastEvaluatedTableName } : {};
+    const output = await dynamoDB.send(new ListTablesCommand(input));
+    const results = previousResults.concat(output.TableNames);
+    if (output.LastEvaluatedTableName !== undefined) {
+      return sendCommand(results, output.LastEvaluatedTableName)
+    } else {
+      return results
+    }
+  }
+
+  return await sendCommand([], undefined)
+};
+
+/**
+ * @param {import('@aws-sdk/client-dynamodb').TableDescription} table
+ * @returns {TableUsage}
+ */
+const collectTableUsage = (table) => {
+  const itemCount = table.ItemCount || 0;
+  const sizeBytes = table.TableSizeBytes || 0;
+  const averageItemSizeBytes = itemCount !== 0 ? sizeBytes / itemCount : 0;
+  const provisionedCapacity =
+    ((table.BillingModeSummary !== undefined &&
+        table.BillingModeSummary.BillingMode === BillingMode.PAY_PER_REQUEST) ||
+        table.ProvisionedThroughput === undefined) ?
+      undefined :
+      {
+        rcu: table.ProvisionedThroughput.ReadCapacityUnits || 0,
+        wcu: table.ProvisionedThroughput.WriteCapacityUnits || 0
+      };
+  return {
+    name: table.TableName,
+    sizeBytes,
+    itemCount,
+    averageItemSizeBytes,
+    provisionedCapacity
   }
 };
 
@@ -84,8 +118,8 @@ export const collectCosts = async () => {
  */
 const summarize = (tableUsages) => {
   const summary = tableUsages.reduce((usageSummary, tableUsage) => ({
-    byteReads: usageSummary.byteReads + tableUsage.rcu * 4096,
-    byteWrites: usageSummary.byteWrites + tableUsage.wcu * 1024,
+    byteReads: usageSummary.byteReads + (tableUsage.provisionedCapacity?.rcu || 0) * 4096, // TODO Handle on-demand throughput
+    byteWrites: usageSummary.byteWrites + (tableUsage.provisionedCapacity?.wcu || 0) * 1024,
     sizeBytes: usageSummary.sizeBytes + tableUsage.sizeBytes,
     itemCount: usageSummary.itemCount + tableUsage.itemCount
   }), {
