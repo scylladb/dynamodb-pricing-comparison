@@ -4,7 +4,7 @@ Source code of an AWS Serverless Application that analyzes your DynamoDB usage o
 
 ## Install
 
-The simplest way to use the application is to deploy the version published on the AWS Serverless Application Repository. Alternatively, you can build the application from the sources and deploy it with the AWS SAM CLI.
+The simplest way to use the application is to deploy the version published to the AWS Serverless Application Repository. Alternatively, you can build the application from the sources and deploy it with the AWS SAM CLI.
 
 ### Deploy from the Serverless Application Repository
 
@@ -12,7 +12,7 @@ Open the following URL:
 
 https://eu-central-1.console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:eu-central-1:164221962816:applications/dynamodb-pricing-comparison
 
-Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables` and `dynamodb:DescribeTable`. The application will not change, delete, or share any of your data.
+Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. The application will not read, change, delete, or share any of your data.
 
 Tick the box “I acknowledge that this app creates custom IAM roles.”
 
@@ -20,7 +20,7 @@ Edit the stack name if desired, and choose “Deploy”.
 
 You should be redirected to the newly created Lambda application. After the deployment finishes, you should see an endpoint in the “API endpoint” box.
 
-Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page.
+Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB.
 
 To delete the application, delete the CloudFormation stack that was created during the deployment step. Open the CloudFormation console at https://console.aws.amazon.com/cloudformation#/stacks. Find the deployed stack (for example, look for `serverlessrepo-dynamodb-pricing-comparison`), and choose “Delete”.
 
@@ -52,7 +52,7 @@ The following output will be displayed in the outputs when the deployment is com
 
 Open that endpoint URL to collect metrics about your DynamoDB usage and visualize the results on a web page.
 
-To delete the application, you can use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
+To delete the application, you can use the AWS CLI. Assuming you used `dynamodb-pricing-comparison` for the stack name, you can run the following:
 
 ~~~ shell
 sam delete --stack-name dynamodb-pricing-comparison
