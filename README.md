@@ -1,6 +1,6 @@
 # dynamodb-pricing-comparison
 
-Source code of an AWS Serverless Application that analyzes your DynamoDB usage on the AWS cloud, and shows you the pricing for an equivalent usage of [ScyllaDB’s Alternator](https://resources.scylladb.com/dynamodb-replacement), which is a drop-in alternative for DynamoDB.
+AWS Serverless Application that analyzes your DynamoDB usage on the AWS cloud, and shows you the pricing for an equivalent usage of [ScyllaDB’s Alternator](https://resources.scylladb.com/dynamodb-replacement), which is a drop-in alternative for DynamoDB.
 
 ## Install
 
@@ -8,19 +8,16 @@ The simplest way to use the application is to deploy the version published to th
 
 ### Deploy from the Serverless Application Repository
 
-Open the following URL:
-
-https://eu-central-1.console.aws.amazon.com/lambda/home#/create/app?applicationId=arn:aws:serverlessrepo:eu-central-1:164221962816:applications/dynamodb-pricing-comparison
-
-Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. The application will not read, change, delete, or share any of your data.
-
-Tick the box “I acknowledge that this app creates custom IAM roles.”
-
-Edit the stack name if desired, and choose “Deploy”.
-
-You should be redirected to the newly created Lambda application. After the deployment finishes, you should see an endpoint in the “API endpoint” box.
-
-Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB.
+1. Open the [Serverless Application Repository](https://console.aws.amazon.com/serverlessrepo#/available-applications).
+2. In the top-right corner, select the region in which you want to analyse your DynamoDB usage.
+3. Search for the application “dynamodb-pricing-comparison”. Make sure to tick the box “Show apps that create custom IAM roles or resource policies”.
+   In case the application is not available in your region, follow the manual deployment process below or [open a new issue](https://github.com/scylladb/dynamodb-pricing-comparison/issues/new).
+4. Click on the application name to open the deployment screen.
+5. Tick the box “I acknowledge that this app creates custom IAM roles.”
+   Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. The application will not read, change, delete, or share any of your data.
+6. Edit the stack name if desired, and choose “Deploy”.
+7. You should be redirected to the newly created Lambda application. After the deployment finishes, you should see an endpoint in the “API endpoint” box.
+8. Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB.
 
 To delete the application, delete the CloudFormation stack that was created during the deployment step. Open the CloudFormation console at https://console.aws.amazon.com/cloudformation#/stacks. Find the deployed stack (for example, look for `serverlessrepo-dynamodb-pricing-comparison`), and choose “Delete”.
 

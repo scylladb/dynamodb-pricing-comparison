@@ -27,7 +27,6 @@ Metadata:
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
     Labels: ["DynamoDB", "ScyllaDB", "NoSQL", "Storage"]
-    SemanticVersion: 1.0.18
     SourceCodeUrl: https://github.com/scylladb/dynamodb-pricing-comparison
 
 # Resources declares the AWS resources that you want to include in the stack

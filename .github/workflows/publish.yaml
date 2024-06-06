@@ -1,0 +1,72 @@
+name: Publish the application to the Serverless Application Repository
+
+on:
+  release:
+    types:
+      - 'published'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - run: sam build
+      - run: sam package --region eu-central-1 --output-template-file packaged.yaml --s3-bucket dynamodb-pricing-comparison
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - uses: actions/upload-artifact@v4
+        with:
+          path: packaged.yaml
+
+  publish:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        region:
+          - us-east-2
+          - us-east-1
+          - us-west-1
+          - us-west-2
+          # - af-south-1
+          # - ap-east-1
+          # - ap-south-2
+          # - ap-southeast-3
+          # - ap-southeast-4
+          - ap-south-1
+          # - ap-northeast-3
+          - ap-northeast-2
+          - ap-southeast-1
+          - ap-southeast-2
+          - ap-northeast-1
+          - ca-central-1
+          # - ca-west-1
+          - eu-central-1
+          - eu-west-1
+          - eu-west-2
+          # - eu-south-1
+          - eu-west-3
+          # - eu-south-2
+          - eu-north-1
+          # - eu-central-2
+          # - il-central-1
+          # - me-south-1
+          # - me-central-1
+          - sa-east-1
+          # - us-gov-east-1
+          # - us-gov-west-1
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: sam publish --semantic-version ${{ github.event.release.tag_name }} --template artifact/packaged.yaml --region ${{ matrix.region }}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ matrix.region }}

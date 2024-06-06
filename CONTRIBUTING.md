@@ -85,13 +85,21 @@ Choose “Save changes”.
 
 Publish a new version of the program with the following steps:
 
-1. Bump the `SemanticVersion` property in the file `template.yaml`.
-2. Build the application and package it to your S3 bucket:
+1. Go to https://github.com/scylladb/dynamodb-pricing-comparison/releases
+2. Choose “Draft a new release”
+3. Set the release version as tag name (e.g. “1.2.3”) and release title, and make sure it is different from the latest release
+4. Choose “Publish release”
+
+### Manual Publishing
+
+In case the GitHub workflow fails, invoke the following commands:
+
+1. Build the application and package it to your S3 bucket:
    ~~~ shell
    sam build
    sam package --output-template-file packaged.yaml --s3-bucket dynamodb-pricing-comparison
    ~~~
-3. Publish the packaged application:
+2. Publish the packaged application:
    ~~~ shell
-   sam publish --template packaged.yaml --region eu-central-1
+   sam publish --semantic-version <RELEASE_VERSION> --template packaged.yaml --region eu-central-1
    ~~~
