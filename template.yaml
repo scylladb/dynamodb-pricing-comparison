@@ -27,7 +27,7 @@ Metadata:
     LicenseUrl: LICENSE.txt
     ReadmeUrl: README.md
     Labels: ["DynamoDB", "ScyllaDB", "NoSQL", "Storage"]
-    SemanticVersion: 1.0.15
+    SemanticVersion: 1.0.18
     SourceCodeUrl: https://github.com/scylladb/dynamodb-pricing-comparison
 
 # Resources declares the AWS resources that you want to include in the stack
@@ -88,6 +88,11 @@ Resources:
                 - logs:PutLogEvents
               Resource:
                 - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/dynamodb-pricing-comparison:*"
+            - Effect: Allow
+              Action:
+                - cloudwatch:GetMetricData
+              Resource:
+                - "*"
   # Each Lambda function is defined by properties:
   # https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
 

@@ -34,30 +34,8 @@ export const renderHtml = async ({ onDemand, provisioned }) => `
       </article>
       <article>
         <h2>Provisioned DynamoDB Usage</h2>
-        <p>
-          The table below lists the costs of all your provisioned DynamoDB tables.
-        </p>
-        <table>
-          <tr><th>Name</th><th>Size</th><th>Average Item Size</th><th>RCU</th><th>WCU</th></tr>
-          ${
-            provisioned.tableUsages.map(table => `
-              <tr>
-                <td>${table.name}</td>
-                <td>${formatBytes(table.sizeBytes)}</td>
-                <td>${formatBytes(table.averageItemSizeBytes)}</td>
-                <td>${table.provisionedCapacity.rcu}</td>
-                <td>${table.provisionedCapacity.wcu}</td>
-              </tr>`
-            ).join('')
-          }
-          <tr>
-            <td><strong>Total</strong></td>
-            <td><strong>${formatBytes(provisioned.summary.sizeBytes)}</strong></td>
-            <td><strong>${formatBytes(provisioned.summary.averageItemSizeBytes)}</strong></td>
-            <td><strong>${Math.round(provisioned.summary.byteReads / 4096)}</strong></td>
-            <td><strong>${Math.round(provisioned.summary.byteWrites / 1024)}</strong></td>
-          </tr>
-        </table>
+        <p>The table below lists the characteristics of all your provisioned DynamoDB tables.</p>
+        ${ renderUsages(provisioned) }
         <p>
           See <a href="${scyllaPricingUrl(provisioned.summary)}" target="_blank">ScyllaDB Cloud pricing</a> for a
           similar usage.
@@ -65,7 +43,15 @@ export const renderHtml = async ({ onDemand, provisioned }) => `
       </article>
       <article>
         <h2>On-Demand DynamoDB Usage</h2>
-        <p>TBD</p>
+        <p>
+          The table below lists the size and usage of all your on-demand DynamoDB tables. The read and write capacity
+          units are average values based on your actual consumption in the last 30 days.
+        </p>
+        ${ renderUsages(onDemand) }
+        <p>
+          See <a href="${scyllaPricingUrl(onDemand.summary)}" target="_blank">ScyllaDB Cloud pricing</a> for a
+          similar usage.
+        </p>
       </article>
       <footer>
         <p>
@@ -79,13 +65,42 @@ export const renderHtml = async ({ onDemand, provisioned }) => `
 `;
 
 /**
+ *
+ * @param {Usages} usages
+ * @returns {string}
+ */
+const renderUsages = usages => `
+  <table>
+    <tr><th>Name</th><th>Size</th><th>Average Item Size</th><th>RCU</th><th>WCU</th></tr>
+    ${
+      usages.tableUsages.map(table => `
+        <tr>
+          <td>${table.name}</td>
+          <td>${formatBytes(table.sizeBytes)}</td>
+          <td>${formatBytes(table.averageItemSizeBytes)}</td>
+          <td>${Math.round(table.rcu)}</td>
+          <td>${Math.round(table.wcu)}</td>
+        </tr>`
+      ).join('')
+    }
+    <tr>
+      <td><strong>Total</strong></td>
+      <td><strong>${formatBytes(usages.summary.sizeBytes)}</strong></td>
+      <td><strong>${formatBytes(usages.summary.averageItemSizeBytes)}</strong></td>
+      <td><strong>${Math.round(usages.summary.readThroughputBytes / 4096)}</strong></td>
+      <td><strong>${Math.round(usages.summary.writeThroughputBytes / 1024)}</strong></td>
+    </tr>
+  </table>
+`;
+
+/**
  * @param {UsageSummary} table
  * @returns {string}
  */
 const scyllaPricingUrl = (table) => {
   const uri = new URL('https://www.scylladb.com/product/scylla-cloud/get-pricing?');
-  uri.searchParams.append('reads', Math.round(table.byteReads / table.averageItemSizeBytes).toString());
-  uri.searchParams.append('writes', Math.round(table.byteWrites / table.averageItemSizeBytes).toString());
+  uri.searchParams.append('reads', Math.round(table.readThroughputBytes / table.averageItemSizeBytes).toString());
+  uri.searchParams.append('writes', Math.round(table.writeThroughputBytes / table.averageItemSizeBytes).toString());
   uri.searchParams.append('itemSize', Math.round(table.averageItemSizeBytes / kB).toString());
   uri.searchParams.append('storage', Math.round(table.sizeBytes / TB).toString());
   uri.searchParams.append('cloudProvider', 'AWS')
