@@ -1,7 +1,9 @@
 name: Publish the application to the Serverless Application Repository
 
 on:
-  workflow_dispatch:
+  release:
+    types:
+      - 'published'
 
 jobs:
   build:
