@@ -12,6 +12,11 @@ Description: >-
   Deploy the app and browse its API endpoint. It will collect metrics about your DynamoDB usage,
   and it will display them on a web page with a comparison with the cost of using an equivalent
   provisioning on Scylla Cloud.
+  
+  Please note that the application will create IAM roles to query your DynamoDB usage. More
+  specifically, the application needs to be granted the right to perform the actions
+  `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. The
+  application will not read, change, delete, or share any of your data.
 
 # Transform section specifies one or more macros that AWS CloudFormation uses to process your template
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/transform-section-structure.html

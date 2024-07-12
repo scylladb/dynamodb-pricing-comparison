@@ -14,7 +14,7 @@ The simplest way to use the application is to deploy the version published to th
    In case the application is not available in your region, follow the manual deployment process below or [open a new issue](https://github.com/scylladb/dynamodb-pricing-comparison/issues/new).
 4. Click on the application name to open the deployment screen.
 5. Tick the box “I acknowledge that this app creates custom IAM roles.”
-   Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. The application will not read, change, delete, or share any of your data.
+   Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. **The application will not read, change, delete, or share any of your data**.
 6. Edit the stack name if desired, and choose “Deploy”.
 7. You should be redirected to the newly created Lambda application. After the deployment finishes, you should see an endpoint in the “API endpoint” box.
 8. Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB.
