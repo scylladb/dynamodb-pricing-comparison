@@ -17,7 +17,7 @@ The simplest way to use the application is to deploy the version published to th
    Please note that the application will create IAM roles to query your DynamoDB usage. More specifically, the application needs to be granted the right to perform the actions `dynamodb:ListTables`, `dynamodb:DescribeTable`, and `cloudwatch:GetMetricData`. **The application will not read, change, delete, or share any of your data**.
 6. Edit the stack name if desired, and choose “Deploy”.
 7. You should be redirected to the newly created Lambda application. After the deployment finishes, you should see an endpoint in the “API endpoint” box.
-8. Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB.
+8. Click that endpoint to collect metrics about your DynamoDB usage and visualize the results on a web page. The web page displays a summary of your usage of provisioned tables, and a summary of your usage of on-demand tables, with links to Scylla Cloud pricing calculator to estimates your possible savings if you switch to ScyllaDB. See the “Use” section below for more options.
 
 To delete the application, delete the CloudFormation stack that was created during the deployment step. Open the CloudFormation console at https://console.aws.amazon.com/cloudformation#/stacks. Find the deployed stack (for example, look for `serverlessrepo-dynamodb-pricing-comparison`), and choose “Delete”.
 
@@ -47,13 +47,36 @@ The first command will build the source of the application. The second command w
 The following output will be displayed in the outputs when the deployment is complete:
 * API Gateway endpoint URL
 
-Open that endpoint URL to collect metrics about your DynamoDB usage and visualize the results on a web page.
+Open that endpoint URL to collect metrics about your DynamoDB usage and visualize the results on a web page. See the “Use” section below for more options.
 
 To delete the application, you can use the AWS CLI. Assuming you used `dynamodb-pricing-comparison` for the stack name, you can run the following:
 
 ~~~ shell
 sam delete --stack-name dynamodb-pricing-comparison
 ~~~
+
+## Use
+
+The installation process outputs the URL of an API endpoint that you can call to collect metrics about your DynamoDB usage.
+
+The endpoint supports the following query parameter:
+
+- `format`: Accepted values are either `html` or `csv`. This parameter is optional and defaults to `html`. With `format=html`, the endpoint produces an HTML page that can be rendered by a Web browser. With `format=csv`, the endpoint produces a CSV document with the following columns:
+  - Table name
+  - Billing mode (`PAY_PER_REQUEST`, or `PROVISIONED`)
+  - Table size (bytes)
+  - Average item size (bytes)
+  - Read capacity units
+  - Write capacity units
+  - ScyllaDB cloud pricing comparison
+
+For instance, to export your DynamoDB usage into a CSV file, use the following command:
+
+~~~ bash
+curl "${API_GATEWAY_ENDPOINT_URL}?format=csv" > dynamodb-usage.csv
+~~~
+
+Where `API_GATEWAY_ENDPOINT_URL` is the URL of the API endpoint produced by the installation process.
 
 ## Contribute
 
