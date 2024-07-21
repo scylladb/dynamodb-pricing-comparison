@@ -1,14 +1,67 @@
 import {collectAllUsages} from "./collect-dynamodb-usage.mjs";
-import {renderHtml} from "./render.mjs";
+import {renderHtml} from "./render/html.mjs";
+import {Request} from "./request.mjs";
+import {renderCsv} from "./render/csv.mjs";
 
-/** AWS Lambda handler triggered by the API Gateway */
+/**
+ * AWS Lambda handler triggered by the API Gateway
+ *
+ * @param event {{queryStringParameters}}
+ */
 export const getDynamoDBUsage = async (event) => {
   console.info('received:', event); // logs are written to CloudWatch
-  return {
-    statusCode: 200,
-    headers: {
-      "Content-Type": "text/html; charset=utf-8"
-    },
-    body: await renderHtml(await collectAllUsages())
+  // Parse client request
+  let request;
+  try {
+    request = parseRequest(event.queryStringParameters || {});
+  } catch (error) {
+    return {
+      statusCode: 400,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8"
+      },
+      body: `Error: ${error}`
+    }
   }
+
+  // Collect DynamoDB usage
+  const usages = await collectAllUsages();
+
+  // Render result
+  if (request.format === 'csv') {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "text/csv; charset=utf-8"
+      },
+      body: renderCsv(usages)
+    }
+  } else {
+    return {
+      statusCode: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8"
+      },
+      body: await renderHtml(usages)
+    }
+  }
+};
+
+/**
+ * @param queryParameters {Object}
+ * @return {Request}
+ */
+const parseRequest = (queryParameters) => {
+  const request = new Request();
+
+  const format = queryParameters.format;
+  if (format !== undefined) {
+    if (format === 'html' || format === 'csv') {
+      request.withFormat(format);
+    } else {
+      throw `Unsupported format '${format}'. Valid formats are 'html' and 'csv'.`;
+    }
+  }
+
+  return request;
 };

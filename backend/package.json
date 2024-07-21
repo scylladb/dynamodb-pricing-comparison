@@ -4,6 +4,7 @@
   "private": "true",
   "dependencies": {
     "@aws-sdk/client-dynamodb": "3.590.0",
-    "@aws-sdk/client-cloudwatch": "3.590.0"
+    "@aws-sdk/client-cloudwatch": "3.590.0",
+    "csv-writer": "1.6.0"
   }
 }

@@ -1,0 +1,6 @@
+{
+  "httpMethod": "GET",
+  "queryStringParameters": {
+    "format": "csv"
+  }
+}
