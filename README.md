@@ -1,14 +1,22 @@
 # dynamodb-pricing-comparison
 
-AWS Serverless Application that analyzes your DynamoDB usage on the AWS cloud, and shows you the pricing for an equivalent usage of [ScyllaDB’s Alternator](https://resources.scylladb.com/dynamodb-replacement), which is a drop-in alternative for DynamoDB.
+Analyze your DynamoDB usage on the AWS cloud, and see the pricing for an equivalent usage of [ScyllaDB’s Alternator](https://resources.scylladb.com/dynamodb-replacement), which is a drop-in alternative for DynamoDB.
 
 For the sake of simplicity the usage of both on-demand and provisioned tables is expressed in read or write capacity units. In the case of provisioned tables, it corresponds to the provisioned capacity. In the case of on-demand tables, it corresponds to the average usage per second over the last 30 days.
 
-## Install
+The application is available as an AWS Serverless Application, or a Node.js command-line application.
+
+The AWS Serverless Application can be installed in a few clicks and makes it easy to share your results within your organization.
+
+The command-line interface requires Node.js and `aws` to be installed on your machine, and can be more convenient to use for scripting purpose.
+
+## Install and Use the AWS Serverless Application
+
+### Install the AWS Serverless Application
 
 The simplest way to use the application is to deploy the version published to the AWS Serverless Application Repository. Alternatively, you can build the application from the sources and deploy it with the AWS SAM CLI.
 
-### Deploy from the Serverless Application Repository
+#### Deploy from the Serverless Application Repository
 
 1. Open the [Serverless Application Repository](https://console.aws.amazon.com/serverlessrepo#/available-applications).
 2. In the top-right corner, select the region in which you want to analyse your DynamoDB usage.
@@ -23,12 +31,20 @@ The simplest way to use the application is to deploy the version published to th
 
 To delete the application, delete the CloudFormation stack that was created during the deployment step. Open the CloudFormation console at https://console.aws.amazon.com/cloudformation#/stacks. Find the deployed stack (for example, look for `serverlessrepo-dynamodb-pricing-comparison`), and choose “Delete”.
 
-### Build and Deploy from Sources
+#### Build and Deploy from Sources
 
 You need the following tools:
 
+- [Git](https://git-scm.com).
 - [AWS SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html).
 - [Node.js](https://nodejs.org/en/), including the `npm` package management tool.
+
+Start by cloning this repository:
+
+~~~ shell
+git clone https://github.com/scylladb/dynamodb-pricing-comparison.git
+cd dynamodb-pricing-comparison
+~~~
 
 To build and deploy the application for the first time, run the following in your shell:
 
@@ -57,28 +73,71 @@ To delete the application, you can use the AWS CLI. Assuming you used `dynamodb-
 sam delete --stack-name dynamodb-pricing-comparison
 ~~~
 
-## Use
+### Use the AWS Serverless Application
 
 The installation process outputs the URL of an API endpoint that you can call to collect metrics about your DynamoDB usage.
 
-The endpoint supports the following query parameter:
-
-- `format`: Accepted values are either `html` or `csv`. This parameter is optional and defaults to `html`. With `format=html`, the endpoint produces an HTML page that can be rendered by a Web browser. With `format=csv`, the endpoint produces a CSV document with the following columns:
-  - Table name
-  - Billing mode (`PAY_PER_REQUEST`, or `PROVISIONED`)
-  - Table size (bytes)
-  - Average item size (bytes)
-  - Read capacity units
-  - Write capacity units
-  - ScyllaDB cloud pricing comparison
-
-For instance, to export your DynamoDB usage into a CSV file, use the following command:
+You can pass options as query parameters. See below the supported [options](#options). For instance, to export your DynamoDB usage into a CSV file, use the following command:
 
 ~~~ bash
 curl "${API_GATEWAY_ENDPOINT_URL}?format=csv" > dynamodb-usage.csv
 ~~~
 
 Where `API_GATEWAY_ENDPOINT_URL` is the URL of the API endpoint produced by the installation process.
+
+## Install and Use the Command-Line Interface
+
+You need the following tools:
+
+- [Git](https://git-scm.com).
+- [Node.js](https://nodejs.org) version 14 or higher.
+- [AWS CLI](https://aws.amazon.com/cli/).
+
+Start by cloning this repository:
+
+~~~ shell
+git clone https://github.com/scylladb/dynamodb-pricing-comparison.git
+cd dynamodb-pricing-comparison
+~~~
+
+Install the application dependencies:
+
+~~~ shell
+npm install --prefix ./backend
+~~~
+
+Make sure that your AWS credentials are up-to-date in `~/.aws`, or run `aws configure` to configure the region and account to collect the DynamoDB usage from.
+
+Run the command-line interface:
+
+~~~ shell
+bin/dynamodb-pricing-comparison.mjs > dynamodb-usage.html
+~~~
+
+Then open the file `dynamodb-usage.html` in a web browser.
+
+Pass the `--help` argument to show the usage documentation:
+
+~~~ shell
+bin/dynamodb-pricing-comparison.mjs --help
+~~~
+
+You can pass options as command-line arguments. See below the list of supported [options](#options). Prefix each option name with `--`. For instance, to export your DynamoDB usage into a CSV file, use the following command:
+
+~~~ bash
+bin/dynamodb-pricing-comparison.mjs --format=csv > dynamodb-usage.csv
+~~~
+
+## Options
+
+- `format`: Accepted values are either `html` or `csv`. This parameter is optional and defaults to `html`. With `html`, the endpoint produces an HTML page that can be rendered by a Web browser. With `csv`, the endpoint produces a CSV document with the following columns:
+    - Table name
+    - Billing mode (`PAY_PER_REQUEST`, or `PROVISIONED`)
+    - Table size (bytes)
+    - Average item size (bytes)
+    - Read capacity units
+    - Write capacity units
+    - ScyllaDB cloud pricing comparison
 
 ## Contribute
 
