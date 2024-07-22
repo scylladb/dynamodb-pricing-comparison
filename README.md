@@ -2,7 +2,7 @@
 
 Analyze your DynamoDB usage on the AWS cloud, and see the pricing for an equivalent usage of [ScyllaDB’s Alternator](https://resources.scylladb.com/dynamodb-replacement), which is a drop-in alternative for DynamoDB.
 
-For the sake of simplicity the usage of both on-demand and provisioned tables is expressed in read or write capacity units. In the case of provisioned tables, it corresponds to the provisioned capacity. In the case of on-demand tables, it corresponds to the average usage per second over the last 30 days.
+For the sake of simplicity the usage of both on-demand and provisioned tables is expressed in read or write capacity units. In the case of provisioned tables, it corresponds to the provisioned capacity. In the case of on-demand tables, by default it corresponds to the average usage per second over the last 30 days, and it can be configured (see the [`from-date` and `to-date` options](#options)).
 
 The application is available as an AWS Serverless Application, or a Node.js command-line application.
 
