@@ -2,6 +2,7 @@ import {collectAllUsages} from "./collect-dynamodb-usage.mjs";
 import {renderHtml} from "./render/html.mjs";
 import {Request} from "./request.mjs";
 import {renderCsv} from "./render/csv.mjs";
+import {parseDate} from "./util.mjs";
 
 /**
  * AWS Lambda handler triggered by the API Gateway
@@ -25,7 +26,7 @@ export const getDynamoDBUsage = async (event) => {
   }
 
   // Collect DynamoDB usage
-  const usages = await collectAllUsages();
+  const usages = await collectAllUsages(request.dateRange);
 
   // Render result
   if (request.format === 'csv') {
@@ -61,6 +62,21 @@ const parseRequest = (queryParameters) => {
     } else {
       throw `Unsupported format '${format}'. Valid formats are 'html' and 'csv'.`;
     }
+  }
+
+  const fromDate = queryParameters['from-date'];
+  const toDate = queryParameters['to-date'];
+  if (fromDate !== undefined && toDate !== undefined) {
+    const start = parseDate(fromDate);
+    const end = parseDate(toDate);
+    if (end <= start) {
+      throw `Invalid combination of parameters: 'from-date' must be before 'to-date'`;
+    }
+    request.withDateRange({ start, end });
+  } else if (fromDate === undefined && toDate !== undefined) {
+    throw `Invalid combination of parameters: 'from-date' must be supplied with 'to-date'`;
+  } else if (fromDate !== undefined && toDate === undefined) {
+    throw `Invalid combination of parameters: 'to-date' must be supplied with 'from-date'`;
   }
 
   return request;

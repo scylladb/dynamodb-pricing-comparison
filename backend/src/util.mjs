@@ -45,3 +45,16 @@ export const formatBytes = (value) => {
   else if (value <= GB) return `${Math.round(value / MB)} MB`
   else return `${Math.round(value / GB)} GB`
 }
+
+/**
+ * @param {string} str
+ * @return {Date}
+ */
+export const parseDate = (str) => {
+  const date = new Date(str);
+  if (isNaN(date.getTime())) {
+    throw `Invalid date: ${str}. Please use the format 'YYYY-MM-DD'.`
+  }
+  return date
+};
+
