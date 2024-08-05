@@ -139,11 +139,9 @@ bin/dynamodb-pricing-comparison.mjs --format=csv > dynamodb-usage.csv
     - Write capacity units
     - ScyllaDB cloud pricing comparison
 
-- `from-date`: Start date to use when collecting usage of on-demand tables. By default, the start date is 30 days ago.
-  Valid format: `YYYY-MM-DD`.
+- `from-date`: Start date to use when collecting usage of on-demand tables. By default, the start date is 30 days ago. It must be supplied if `to-date` is supplied. Valid format: ISO 8601 dates such as `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`, e.g. `2024-08-05` or `2024-08-05T08:00`.
 
-- `to-date`: End date to use when collecting usage of on-demand tables. By default, the end date is the date of today.
-  Valid format: `YYYY-MM-DD`.
+- `to-date`: End date to use when collecting usage of on-demand tables. By default, the end date is the date of today. Valid format: ISO 8601 dates such as `YYYY-MM-DD` or `YYYY-MM-DDThh:mm`, e.g. `2024-08-05` or `2024-08-05T08:00`.
 
 ## Contribute
 

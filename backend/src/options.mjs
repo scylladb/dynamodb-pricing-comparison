@@ -61,20 +61,20 @@ const parseFormat = (inputs) => {
 const parseDateRange = (inputs) => {
   const fromDate = inputs[OPTION_FROM_DATE];
   const toDate = inputs[OPTION_TO_DATE];
-  if (fromDate !== undefined && toDate !== undefined) {
+  if (fromDate !== undefined) {
     const start = parseDate(fromDate);
-    const end = parseDate(toDate);
+    const end = toDate !== undefined ? parseDate(toDate) : new Date();
     if (end <= start) {
       throw `Invalid combination of parameters: '${OPTION_FROM_DATE}' must be before '${OPTION_TO_DATE}'`;
     }
     return { start, end }
-  } else if (fromDate === undefined && toDate === undefined) {
+  } else if (toDate === undefined) {
     const now = new Date();
-    const oneMonthAgo = new Date(now);
-    oneMonthAgo.setUTCDate(oneMonthAgo.getUTCDate() - 30);
-    return { start: oneMonthAgo, end: now }
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+    return { start: thirtyDaysAgo, end: now }
   } else {
-    throw `Invalid combination of parameters: '${OPTION_FROM_DATE}' and '${OPTION_TO_DATE}' must be supplied together`;
+    throw `Invalid combination of parameters: '${OPTION_FROM_DATE}' must be supplied if '${OPTION_TO_DATE}' is supplied`;
   }
 };
 
