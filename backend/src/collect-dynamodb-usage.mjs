@@ -31,9 +31,10 @@ const cloudWatch = new CloudWatchClient();
  */
 
 /**
+ * @param {DateRange} dateRange Date range to use to collect on-demand usage
  * @returns {Promise<{ onDemand: Usages, provisioned: Usages }>}
  */
-export const collectAllUsages = async () => {
+export const collectAllUsages = async (dateRange) => {
   const tableNames = await getAllTableNames();
 
   /** @type {Array<import('@aws-sdk/client-dynamodb').TableDescription>} */
@@ -48,7 +49,9 @@ export const collectAllUsages = async () => {
     provisionedTableDescriptions.map(collectProvisionedCapacity);
 
   const onDemandTableUsages =
-    await Promise.all(onDemandTableDescriptions.map(collectOnDemandUsage));
+    await Promise.all(
+      onDemandTableDescriptions.map(table => collectOnDemandUsage(table, dateRange))
+    );
 
   return {
     provisioned: summarize(provisionedTableUsages),
@@ -119,17 +122,15 @@ const collectProvisionedCapacity = (table) => {
 
 /**
  * @param {import('@aws-sdk/client-dynamodb').TableDescription} table
+ * @param {DateRange} dateRange
  * @returns {Promise<TableUsage>}
  */
-const collectOnDemandUsage = async (table) => {
-  const today = new Date();
-  const oneMonthAgo = new Date(today);
-  oneMonthAgo.setUTCDate(oneMonthAgo.getUTCDate() - 30); // Collect usage data over 30 days in the past
+const collectOnDemandUsage = async (table, dateRange) => {
 
   const [consumedRCU, consumedWCU] =
     await Promise.all([
-      getConsumedRCU(oneMonthAgo, today, table.TableName),
-      getConsumedWCU(oneMonthAgo, today, table.TableName)
+      getConsumedRCU(dateRange.start, dateRange.end, table.TableName),
+      getConsumedWCU(dateRange.start, dateRange.end, table.TableName)
     ]);
 
   const itemCount = table.ItemCount || 0;
@@ -194,8 +195,12 @@ const getConsumedCapacityUnits = async (startTime, endTime, tableName, metricNam
     });
   const output = await cloudWatch.send(getMetricData);
   const values = output.MetricDataResults[0].Values;
-  const total = values.reduce((x, y) => x + y);
-  return total / (period * values.length) // Convert back to a throughput per second for consistency with standard RCU and WCU
+  if (values.length === 0) {
+    return 0
+  } else {
+    const total = values.reduce((x, y) => x + y);
+    return total / (period * values.length) // Convert back to a throughput per second for consistency with standard RCU and WCU
+  }
 };
 
 /**

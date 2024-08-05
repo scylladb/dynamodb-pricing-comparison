@@ -1,6 +1,6 @@
 import {collectAllUsages} from "./collect-dynamodb-usage.mjs";
 import {renderHtml} from "./render/html.mjs";
-import {Request} from "./request.mjs";
+import {Options} from "./options.mjs";
 import {renderCsv} from "./render/csv.mjs";
 
 /**
@@ -11,9 +11,9 @@ import {renderCsv} from "./render/csv.mjs";
 export const getDynamoDBUsage = async (event) => {
   console.info('received:', event); // logs are written to CloudWatch
   // Parse client request
-  let request;
+  let options;
   try {
-    request = parseRequest(event.queryStringParameters || {});
+    options = new Options(event.queryStringParameters || {});
   } catch (error) {
     return {
       statusCode: 400,
@@ -25,10 +25,10 @@ export const getDynamoDBUsage = async (event) => {
   }
 
   // Collect DynamoDB usage
-  const usages = await collectAllUsages();
+  const usages = await collectAllUsages(options.dateRange);
 
   // Render result
-  if (request.format === 'csv') {
+  if (options.format === 'csv') {
     return {
       statusCode: 200,
       headers: {
@@ -45,23 +45,4 @@ export const getDynamoDBUsage = async (event) => {
       body: await renderHtml(usages)
     }
   }
-};
-
-/**
- * @param queryParameters {Object}
- * @return {Request}
- */
-const parseRequest = (queryParameters) => {
-  const request = new Request();
-
-  const format = queryParameters.format;
-  if (format !== undefined) {
-    if (format === 'html' || format === 'csv') {
-      request.withFormat(format);
-    } else {
-      throw `Unsupported format '${format}'. Valid formats are 'html' and 'csv'.`;
-    }
-  }
-
-  return request;
 };
